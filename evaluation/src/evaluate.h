@@ -56,9 +56,16 @@ class Evaluator
      * @return Reference on initialisated object.
      */
     Evaluator& operator=(const Evaluator& other);
+    
+    /**
+     * Run a given classifier on a set of positive sample images.
+     * Generates an overview on hits, misses and false positives.
+     */
+    int evaluate();
 
   private:
-    std::string inFile;
+    std::string cascadeFile;
+    std::string posFile;
     std::vector <positive*> positives;
 
     void freeMem();

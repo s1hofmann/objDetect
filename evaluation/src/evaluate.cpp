@@ -4,6 +4,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/objdetect/objdetect.hpp"
 
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -16,11 +17,15 @@ using namespace cv;
 
 Evaluator::Evaluator(const char *cascade, const char *posFile)
 {
-    int pos = this->parsePositives(posFile);
-    
-    if(pos)
+    this->posFile = string(posFile);
+    this->cascadeFile = string(cascade);
+
+    cout << "Cascade file: " << this->cascadeFile << endl;
+    cout << "Positive sample file: " << this->posFile << endl;
+
+    if(!(this->parsePositives(posFile)))
     {
-        cout << "Successfully loaded " << pos << " positive samples." << endl;
+        cout << "Successfully loaded " << this->positives.size() << " positive samples." << endl;
     }
     else
     {
@@ -79,6 +84,7 @@ int Evaluator::parsePositives(const char *posFile)
                         }
 
                         this->positives.push_back(pos);
+                        ++count;
                     }
                     else
                     {
@@ -88,27 +94,70 @@ int Evaluator::parsePositives(const char *posFile)
                 catch (parseException &pe)
                 {
                     cerr << pe.what() << endl;
-                    this->freeMem();
                     break;
                 }
-                ++count;
             }
             catch (bad_alloc &ba)
             {
                 cerr << "Exception: " << ba.what() << endl;
                 this->freeMem();
-                break;
+                return -1;
             }
         }
+        inFile.close();
     }
     else
     {
         cerr << "Error opening file!" << endl;
     }
 
-    inFile.close();
+    return 0;
+}
 
-    return count;
+int Evaluator::evaluate()
+{
+    CascadeClassifier classify;
+    if(!(classify.load(this->cascadeFile)))
+    {
+        cerr << "Unable to load cascade file!" << endl;
+        return -1;
+    }
+    else
+    {
+        cout << "Cascade loaded!" << endl;
+    }
+
+    for(int i = 0; i < this->positives.size(); ++i)
+    {
+        Mat inputImg = imread(this->positives[i]->filename.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
+        
+        if(inputImg.empty())
+        {
+            cerr << "Unable to load sample!" << endl;
+            return -1;
+        }
+        
+        cout << "Processing file: " << this->positives[i]->filename.c_str() << endl;
+        
+        // Stores bounding boxes of detected objects
+        vector <Rect> detects;
+
+        classify.detectMultiScale(inputImg, detects, 1.1, 2, 0|CASCADE_SCALE_IMAGE|CASCADE_DO_CANNY_PRUNING, Size(200, 200));
+        for(int j = 0; j < detects.size(); ++j)
+        {
+            for(int k = 0; k < this->positives[i]->hits.size(); ++k)
+            {
+                if(abs(this->positives[i]->hits[k]->x - detects[j].x) < 50 and abs(this->positives[i]->hits[k]->y - detects[j].y) < 50)
+                {
+                    //TODO: Check overlap of hits
+                    cout << "Possible match" << endl;
+                    cout << "dx: " << abs(this->positives[i]->hits[k]->x - detects[j].x) << " dy: " << abs(this->positives[i]->hits[k]->y - detects[j].y) << endl;
+                }
+            }
+        }
+    }
+    
+    cout << "Evaluation done." << endl;
 }
 
 Evaluator::Evaluator(const Evaluator& other)
