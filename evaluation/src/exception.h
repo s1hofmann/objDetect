@@ -2,14 +2,15 @@
 #define EXCEPTION_H
 
 #include <string>
+#include <exception>
 
-class parseException : public exception
+class parseException : public std::exception
 {
   public:
     parseException(const std::string &msg);
-    std::string what() const;
+    std::string what();
 
-    virtual ~parseException();
+    virtual ~parseException() throw();
 
   private:
     std::string _msg;

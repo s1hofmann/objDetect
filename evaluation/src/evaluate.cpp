@@ -2,6 +2,7 @@
 #include "exception.h"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/objdetect/objdetect.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -15,10 +16,44 @@ using namespace cv;
 
 Evaluator::Evaluator(const char *cascade, const char *posFile)
 {
+    int pos = this->parsePositives(posFile);
+    
+    if(pos)
+    {
+        cout << "Successfully loaded " << pos << " positive samples." << endl;
+    }
+    else
+    {
+        cerr << "Unable to load positive samples." << endl;
+    }
+}
+
+Evaluator::~Evaluator()
+{
+  // cleanup
+  this->freeMem();
+}
+
+void Evaluator::freeMem()
+{
+    for(int i = 0; i < this->positives.size(); ++i)
+    {
+        for(int j = 0; j < this->positives[i]->hits.size(); ++j)
+        {
+            delete this->positives[i]->hits[j];
+            this->positives[i]->hits.clear();
+        }
+        delete this->positives[i];
+        this->positives.clear();
+    }
+}
+
+int Evaluator::parsePositives(const char *posFile)
+{
     string input;
     ifstream inFile(posFile);
 
-    int count = 1;
+    int count = 0;
 
     if(inFile.is_open())
     {
@@ -28,28 +63,41 @@ Evaluator::Evaluator(const char *cascade, const char *posFile)
             {
                 istringstream iss(input);
                 positive *pos = new positive;
-
-                //TODO: Throw exception here
-                if(iss >> pos->filename >> pos->count)
+                
+                try
                 {
-                    for(int i = 0; i < pos->count; ++i)
+                    if(iss >> pos->filename >> pos->count)
                     {
-                        hit *coord = new hit;
-                        iss >> coord->x >> coord->y >> coord->width >> coord->height;
-                        pos->hits.push_back(coord);
-                    }
+                        for(int i = 0; i < pos->count; ++i)
+                        {
+                            hit *coord = new hit;
+                            if(!(iss >> coord->x >> coord->y >> coord->width >> coord->height))
+                            {
+                                throw parseException("Error parsing coordinates!");
+                            }
+                            pos->hits.push_back(coord);
+                        }
 
-                    this->positives.push_back(pos);
+                        this->positives.push_back(pos);
+                    }
+                    else
+                    {
+                        throw parseException("Error parsing file information!");
+                    }
                 }
-                else
+                catch (parseException &pe)
                 {
-                    cerr << "Error parsing data ..." << endl;
+                    cerr << pe.what() << endl;
+                    this->freeMem();
+                    break;
                 }
                 ++count;
             }
-            catch (exception &e)
+            catch (bad_alloc &ba)
             {
-                cerr << "Exception: " << e.what() << endl;
+                cerr << "Exception: " << ba.what() << endl;
+                this->freeMem();
+                break;
             }
         }
     }
@@ -59,11 +107,8 @@ Evaluator::Evaluator(const char *cascade, const char *posFile)
     }
 
     inFile.close();
-}
 
-Evaluator::~Evaluator()
-{
-  // cleanup
+    return count;
 }
 
 Evaluator::Evaluator(const Evaluator& other)

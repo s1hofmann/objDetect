@@ -60,6 +60,9 @@ class Evaluator
   private:
     std::string inFile;
     std::vector <positive*> positives;
+
+    void freeMem();
+    int parsePositives(const char *posFile);
 };
 
 #endif /* #ifndef EVALUATOR_H */
