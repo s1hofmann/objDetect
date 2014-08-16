@@ -15,21 +15,30 @@
 using namespace std;
 using namespace cv;
 
-Evaluator::Evaluator(const char *cascade, const char *posFile)
+Evaluator::Evaluator(const char *cascade, const char *posFile, bool verbose) : _verbose(verbose)
 {
     this->posFile = string(posFile);
     this->cascadeFile = string(cascade);
 
-    cout << "Cascade file: " << this->cascadeFile << endl;
-    cout << "Positive sample file: " << this->posFile << endl;
+    if(this->_verbose)
+    {
+        cout << "Cascade file: " << this->cascadeFile << endl;
+        cout << "Positive sample file: " << this->posFile << endl;
+    }
 
     if(!(this->parsePositives(posFile)))
     {
-        cout << "Successfully loaded " << this->positives.size() << " positive samples." << endl;
+        if(this->_verbose)
+        {
+            cout << "Successfully loaded " << this->positives.size() << " positive samples." << endl;
+        }
     }
     else
     {
-        cerr << "Unable to load positive samples." << endl;
+        if(this->_verbose)
+        {
+            cerr << "Unable to load positive samples." << endl;
+        }
     }
 }
 
@@ -75,7 +84,7 @@ int Evaluator::parsePositives(const char *posFile)
                     {
                         for(int i = 0; i < pos->count; ++i)
                         {
-                            hit *coord = new hit;
+                            Rect *coord = new Rect;
                             if(!(iss >> coord->x >> coord->y >> coord->width >> coord->height))
                             {
                                 throw parseException("Error parsing coordinates!");
@@ -124,9 +133,13 @@ int Evaluator::evaluate()
     }
     else
     {
-        cout << "Cascade loaded!" << endl;
+        if(this->_verbose)
+        {
+            cout << "Cascade loaded!" << endl;
+        }
     }
 
+    // Loop over all positive samples
     for(int i = 0; i < this->positives.size(); ++i)
     {
         Mat inputImg = imread(this->positives[i]->filename.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
@@ -137,38 +150,81 @@ int Evaluator::evaluate()
             return -1;
         }
         
-        cout << "Processing file: " << this->positives[i]->filename.c_str() << endl;
+        if(this->_verbose)
+        {
+            cout << "Processing file: " << this->positives[i]->filename.c_str() << endl;
+        }
         
         // Stores bounding boxes of detected objects
         vector <Rect> detects;
 
         classify.detectMultiScale(inputImg, detects, 1.1, 2, 0|CASCADE_SCALE_IMAGE|CASCADE_DO_CANNY_PRUNING, Size(200, 200));
+
+        // Loop over every detected object in an image
         for(int j = 0; j < detects.size(); ++j)
         {
+            // Loop over every defined object in a positive sample
             for(int k = 0; k < this->positives[i]->hits.size(); ++k)
             {
-                if(abs(this->positives[i]->hits[k]->x - detects[j].x) < 50 and abs(this->positives[i]->hits[k]->y - detects[j].y) < 50)
+                // Check local neighbourhood of defined positive for hits
+                if(abs(this->positives[i]->hits[k]->x - detects[j].x) < this->positives[i]->hits[k]->width/2 and abs(this->positives[i]->hits[k]->y - detects[j].y) < this->positives[i]->hits[k]->width/2)
                 {
-                    //TODO: Check overlap of hits
-                    cout << "Possible match" << endl;
-                    cout << "dx: " << abs(this->positives[i]->hits[k]->x - detects[j].x) << " dy: " << abs(this->positives[i]->hits[k]->y - detects[j].y) << endl;
+                    if(this->_verbose)
+                    {
+                        cout << "Possible match" << endl;
+                        cout << "dx: " << abs(this->positives[i]->hits[k]->x - detects[j].x) << " dy: " << abs(this->positives[i]->hits[k]->y - detects[j].y) << endl;
+                    }
+                    if(this->checkOverlap(*this->positives[i]->hits[k], detects[j]))
+                    {
+                        if(this->_verbose)
+                        {
+                            cout << "True hit." << endl;
+                        }
+                        this->positives[i]->no_hits++;
+                    }
+                    else
+                    {
+                        if(this->_verbose)
+                        {
+                            cout << "False positive." << endl;
+                        }
+                        this->positives[i]->no_false_positives++;
+                    }
                 }
             }
+
         }
+        this->positives[i]->no_misses = this->positives[i]->count - this->positives[i]->no_hits;
     }
+    this->showResults();
+}
+
+double Evaluator::checkOverlap(Rect positive, Rect detect)
+{
+    // Rect = Rect1 & Rect2: An easy way to calculate the intersection of two rectangles
+    Rect intersection = positive & detect;
+
+    // Check percentage of overlapping. >= 50% overlap -> true hit
+    double overlap = (double)(intersection.width*intersection.height)/(positive.width * positive.height);
     
-    cout << "Evaluation done." << endl;
+    if(overlap >= .5)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
-Evaluator::Evaluator(const Evaluator& other)
+void Evaluator::showResults()
 {
-  *this=other;
-}
-
-Evaluator& Evaluator::operator=(const Evaluator& other)
-{
-  if (this != &other){  // no self-assignmet
-    // deep copy
-  }
-  return *this;
+    cout << endl << "Evaluation done!" << endl;
+    cout << endl;
+    cout << "Hits:\t| Misses:\t| False positives:\t| File:" << endl;
+    cout << "-------------------------------------------------------" << endl;
+    for(int i = 0; i < this->positives.size(); ++i)
+    {
+        cout << this->positives[i]->no_hits << "\t| " << this->positives[i]->no_misses << "\t\t| " << this->positives[i]->no_false_positives << "\t\t\t| " << this->positives[i]->filename << endl;
+    }
 }

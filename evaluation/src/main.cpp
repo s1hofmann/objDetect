@@ -4,7 +4,7 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-    Evaluator test("/home/sim0n/Documents/git/rota/rota/cascade.xml", argv[1]);
+    Evaluator test(argv[1], argv[2], true);
     test.evaluate();
     return 0;
 }

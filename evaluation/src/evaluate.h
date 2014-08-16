@@ -15,19 +15,14 @@
  * It runs a trained classifier and creates an overview on hits, misses and false positives.
  */
 
-struct hit
-{
-    int x;
-    int y;
-    int width;
-    int height;
-};
-
 struct positive
 {
     std::string filename;
     int count;
-    std::vector <hit*> hits;
+    std::vector <cv::Rect*> hits;
+    int no_hits;
+    int no_misses;
+    int no_false_positives;
 };
 
 class Evaluator
@@ -37,25 +32,12 @@ class Evaluator
     /**
      * Default constructor
      */
-    Evaluator(const char *cascade, const char *posFile);
+    Evaluator(const char *cascade, const char *posFile, bool verbose=false);
 
     /**
      * Destructor
      */
     virtual ~Evaluator();
-
-    /**
-     * Copy constructor
-     * @param other Reference on object to copy.
-     */
-    Evaluator(const Evaluator& other);
-
-    /** 
-     * Assignment operator
-     * @param other Reference on object to copy.
-     * @return Reference on initialisated object.
-     */
-    Evaluator& operator=(const Evaluator& other);
     
     /**
      * Run a given classifier on a set of positive sample images.
@@ -63,13 +45,23 @@ class Evaluator
      */
     int evaluate();
 
+    /**
+     * Shows results of evaluation.
+     */
+    void showResults();
+
   private:
+    bool _verbose;
     std::string cascadeFile;
     std::string posFile;
     std::vector <positive*> positives;
 
+    // Free dynamically allocated memory
     void freeMem();
+    // Parse files containing positive image samples as described in the CascadeClassifier documentation
     int parsePositives(const char *posFile);
+    // Checks the percentage of overlapping of two rectangles
+    double checkOverlap(cv::Rect positive, cv::Rect detect);
 };
 
 #endif /* #ifndef EVALUATOR_H */
