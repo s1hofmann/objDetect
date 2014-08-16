@@ -15,7 +15,7 @@
 using namespace std;
 using namespace cv;
 
-Evaluator::Evaluator(const char *cascade, const char *posFile, bool verbose) : _verbose(verbose)
+Evaluator::Evaluator(const char *cascade, const char *posFile, bool verbose, bool show) : _verbose(verbose), _show(show)
 {
     this->posFile = string(posFile);
     this->cascadeFile = string(cascade);
@@ -155,31 +155,35 @@ int Evaluator::evaluate()
             cout << "Processing file: " << this->positives[i]->filename.c_str() << endl;
         }
         
-        // Stores bounding boxes of detected objects
-        vector <Rect> detects;
-
-        classify.detectMultiScale(inputImg, detects, 1.1, 2, 0|CASCADE_SCALE_IMAGE|CASCADE_DO_CANNY_PRUNING, Size(200, 200));
+        classify.detectMultiScale(inputImg, this->detects, 1.1, 2, 0|CASCADE_SCALE_IMAGE|CASCADE_DO_CANNY_PRUNING, Size(200, 200));
 
         // Loop over every detected object in an image
-        for(int j = 0; j < detects.size(); ++j)
+        for(int j = 0; j < this->detects.size(); ++j)
         {
             // Loop over every defined object in a positive sample
             for(int k = 0; k < this->positives[i]->hits.size(); ++k)
             {
                 // Check local neighbourhood of defined positive for hits
-                if(abs(this->positives[i]->hits[k]->x - detects[j].x) < this->positives[i]->hits[k]->width/2 and abs(this->positives[i]->hits[k]->y - detects[j].y) < this->positives[i]->hits[k]->width/2)
+                if(abs(this->positives[i]->hits[k]->x - this->detects[j].x) < this->positives[i]->hits[k]->width/2 and abs(this->positives[i]->hits[k]->y - this->detects[j].y) < this->positives[i]->hits[k]->width/2)
                 {
                     if(this->_verbose)
                     {
                         cout << "Possible match" << endl;
-                        cout << "dx: " << abs(this->positives[i]->hits[k]->x - detects[j].x) << " dy: " << abs(this->positives[i]->hits[k]->y - detects[j].y) << endl;
+                        cout << "dx: " << abs(this->positives[i]->hits[k]->x - this->detects[j].x) << " dy: " << abs(this->positives[i]->hits[k]->y - this->detects[j].y) << endl;
                     }
-                    if(this->checkOverlap(*this->positives[i]->hits[k], detects[j]))
+                    if(this->checkOverlap(*this->positives[i]->hits[k], this->detects[j]))
                     {
                         if(this->_verbose)
                         {
                             cout << "True hit." << endl;
                         }
+                        
+                        if(this->_show)
+                        {
+                            rectangle(inputImg, Point(this->detects[j].x, this->detects[j].y), Point(this->detects[j].x+this->detects[j].width, this->detects[j].y+this->detects[j].height), Scalar(0,0,255), 2);
+                            rectangle(inputImg, Point(this->positives[i]->hits[k]->x, this->positives[i]->hits[k]->y), Point(this->positives[i]->hits[k]->x+this->positives[i]->hits[k]->width, this->positives[i]->hits[k]->y+this->positives[i]->hits[k]->height), Scalar(255,0,0), 2);
+                        }
+
                         this->positives[i]->no_hits++;
                     }
                     else
@@ -192,9 +196,18 @@ int Evaluator::evaluate()
                     }
                 }
             }
-
         }
         this->positives[i]->no_misses = this->positives[i]->count - this->positives[i]->no_hits;
+
+        //TODO: Display image showing bounding boxes
+        // Display image showing defined (green color) and detected (red color) objects
+        if(this->_show)
+        {
+            cvNamedWindow("Output", CV_WINDOW_AUTOSIZE);
+            imshow("Output", inputImg);
+
+            waitKey(0);
+        }
     }
     this->showResults();
 }

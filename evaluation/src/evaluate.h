@@ -32,7 +32,7 @@ class Evaluator
     /**
      * Default constructor
      */
-    Evaluator(const char *cascade, const char *posFile, bool verbose=false);
+    Evaluator(const char *cascade, const char *posFile, bool verbose=false, bool show = false);
 
     /**
      * Destructor
@@ -51,16 +51,49 @@ class Evaluator
     void showResults();
 
   private:
+    /**
+     *Verbose mode - more detailed output
+     */
     bool _verbose;
+
+    /**
+     *Show image with bounding boxes of defined and detected elements
+     */
+    bool _show;
+
+    /**
+     *Stores bounding boxes of detected objects
+     */
+    std::vector <cv::Rect> detects;
+
+    /*
+     *Path to cascade classifiers *.xml file
+     */
     std::string cascadeFile;
+
+    /*
+     *Text file containing positive sample data
+     */
     std::string posFile;
+
+    /**
+     *Stores positive image data
+     */
     std::vector <positive*> positives;
 
-    // Free dynamically allocated memory
+    /**
+     *Free dynamically allocated memory
+     */
     void freeMem();
-    // Parse files containing positive image samples as described in the CascadeClassifier documentation
+    
+    /**
+     *Parse files containing positive image samples as described in the CascadeClassifier documentation
+     */
     int parsePositives(const char *posFile);
-    // Checks the percentage of overlapping of two rectangles
+    
+    /**
+     *Checks the percentage of overlapping of two rectangles
+     */
     double checkOverlap(cv::Rect positive, cv::Rect detect);
 };
 
