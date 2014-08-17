@@ -3,8 +3,11 @@
 This project tests and evaluates different classifiers contained in the OpenCV computer vision library.
 
 Used classifiers:
+
 1. Cascade classifier
+
 2. Softcascade classifier
+
 3. LatentSVM classifier
 
 ## Evaluation
