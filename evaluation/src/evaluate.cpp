@@ -15,7 +15,7 @@
 using namespace std;
 using namespace cv;
 
-Evaluator::Evaluator(const char *cascade, const char *posFile, bool verbose, bool show) : _verbose(verbose), _show(show)
+Evaluator::Evaluator(const char *cascade, const char *posFile, bool verbose, bool show, double scale, double neighbours, Size min, Size max) : _verbose(verbose), _show(show), _scale(scale), _neighbours(neighbours), _min(min), _max(max)
 {
     this->posFile = string(posFile);
     this->cascadeFile = string(cascade);
@@ -143,6 +143,8 @@ int Evaluator::evaluate()
     for(int i = 0; i < this->positives.size(); ++i)
     {
         Mat inputImg = imread(this->positives[i]->filename.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
+
+        this->positives[i]->no_misses = this->positives[i]->count;
         
         if(inputImg.empty())
         {
@@ -155,7 +157,8 @@ int Evaluator::evaluate()
             cout << "Processing file: " << this->positives[i]->filename.c_str() << endl;
         }
         
-        classify.detectMultiScale(inputImg, this->detects, 1.1, 2, 0|CASCADE_SCALE_IMAGE|CASCADE_DO_CANNY_PRUNING, Size(200, 200));
+        // CASCADE_DO_CANNY_PRUNING: Function uses Canny edge detector to reject some image regions that contain too few or too much edges and thus can not contain the searched object
+        classify.detectMultiScale(inputImg, this->detects, this->_scale, this->_neighbours, CASCADE_SCALE_IMAGE|CASCADE_DO_CANNY_PRUNING, this->_min, this->_max);
 
         // Loop over every detected object in an image
         for(int j = 0; j < this->detects.size(); ++j)
@@ -180,11 +183,18 @@ int Evaluator::evaluate()
                         
                         if(this->_show)
                         {
-                            rectangle(inputImg, Point(this->detects[j].x, this->detects[j].y), Point(this->detects[j].x+this->detects[j].width, this->detects[j].y+this->detects[j].height), Scalar(0,0,255), 2);
-                            rectangle(inputImg, Point(this->positives[i]->hits[k]->x, this->positives[i]->hits[k]->y), Point(this->positives[i]->hits[k]->x+this->positives[i]->hits[k]->width, this->positives[i]->hits[k]->y+this->positives[i]->hits[k]->height), Scalar(255,0,0), 2);
+                            // Black bounding box for detected objects
+                            rectangle(inputImg, Point(this->detects[j].x, this->detects[j].y), Point(this->detects[j].x+this->detects[j].width, this->detects[j].y+this->detects[j].height), Scalar(0,0,0), 5);
+                            // White bounding box for defined objects
+                            rectangle(inputImg, Point(this->positives[i]->hits[k]->x, this->positives[i]->hits[k]->y), Point(this->positives[i]->hits[k]->x+this->positives[i]->hits[k]->width, this->positives[i]->hits[k]->y+this->positives[i]->hits[k]->height), Scalar(255,255,255), 5);
                         }
 
                         this->positives[i]->no_hits++;
+                        this->positives[i]->no_misses--;
+                        if(this->positives[i]->no_misses < 0)
+                        {
+                            this->positives[i]->no_misses = 0;
+                        }
                     }
                     else
                     {
@@ -197,19 +207,25 @@ int Evaluator::evaluate()
                 }
             }
         }
-        this->positives[i]->no_misses = this->positives[i]->count - this->positives[i]->no_hits;
 
-        //TODO: Display image showing bounding boxes
-        // Display image showing defined (green color) and detected (red color) objects
+        // Display image showing defined and detected objects
         if(this->_show)
         {
+            resize(inputImg, inputImg, Size(1280,800), 1, 1);
             cvNamedWindow("Output", CV_WINDOW_AUTOSIZE);
             imshow("Output", inputImg);
 
             waitKey(0);
+
+            inputImg.release();
+        }
+        else
+        {
+            inputImg.release();
         }
     }
     this->showResults();
+    return 0;
 }
 
 double Evaluator::checkOverlap(Rect positive, Rect detect)
@@ -232,12 +248,27 @@ double Evaluator::checkOverlap(Rect positive, Rect detect)
 
 void Evaluator::showResults()
 {
-    cout << endl << "Evaluation done!" << endl;
+    long total_hits = 0;
+    long total_misses = 0;
+    long total_false_positives = 0;
+
+    cout << "Evaluation done!" << endl;
     cout << endl;
     cout << "Hits:\t| Misses:\t| False positives:\t| File:" << endl;
     cout << "-------------------------------------------------------" << endl;
     for(int i = 0; i < this->positives.size(); ++i)
     {
+        total_hits += this->positives[i]->no_hits;
+        total_misses += this->positives[i]->no_misses;
+        total_false_positives += this->positives[i]->no_false_positives;
+
         cout << this->positives[i]->no_hits << "\t| " << this->positives[i]->no_misses << "\t\t| " << this->positives[i]->no_false_positives << "\t\t\t| " << this->positives[i]->filename << endl;
     }
+    cout << "-------------------------------------------------------" << endl;
+    cout << endl << endl;
+    cout << "Evaluated " << this->positives.size() << " samples." << endl;
+    cout << "-------------------------------------------------------" << endl;
+    cout << "Total hits:\t| Total misses:\t| Total false positives:" << endl;
+    cout << total_hits << "\t\t| " << total_misses << "\t\t| " << total_false_positives << endl;
+    cout << "-------------------------------------------------------" << endl;
 }

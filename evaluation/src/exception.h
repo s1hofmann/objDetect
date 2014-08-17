@@ -10,7 +10,7 @@ class parseException : public std::exception
     parseException(const std::string &msg);
     std::string what();
 
-    virtual ~parseException() throw();
+    virtual ~parseException() noexcept;
 
   private:
     std::string _msg;

@@ -12,7 +12,7 @@ std::string parseException::what()
     return _msg;
 }
 
-parseException::~parseException() throw()
+parseException::~parseException()
 {
   // cleanup
 }

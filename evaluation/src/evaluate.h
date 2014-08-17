@@ -18,11 +18,11 @@
 struct positive
 {
     std::string filename;
-    int count;
+    int count = 0;
     std::vector <cv::Rect*> hits;
-    int no_hits;
-    int no_misses;
-    int no_false_positives;
+    long no_hits = 0;
+    long no_misses = 0;
+    long no_false_positives = 0;
 };
 
 class Evaluator
@@ -32,7 +32,7 @@ class Evaluator
     /**
      * Default constructor
      */
-    Evaluator(const char *cascade, const char *posFile, bool verbose=false, bool show = false);
+    Evaluator(const char *cascade, const char *posFile, bool verbose=false, bool show = false, double scale = 1.1, double neighbours = 3, cv::Size min = cv::Size(0,0), cv::Size max = cv::Size(0,0));
 
     /**
      * Destructor
@@ -60,6 +60,26 @@ class Evaluator
      *Show image with bounding boxes of defined and detected elements
      */
     bool _show;
+
+    /**
+     * Scale factor for cascade classifier
+     */
+    double _scale;
+    
+    /**
+     * Min. no. of neighbours for positive hit
+     */
+    double _neighbours;
+
+    /**
+     * Min. size of detected objects
+     */
+    cv::Size _min;
+
+    /**
+     * Max size of detected objects
+     */
+    cv::Size _max;
 
     /**
      *Stores bounding boxes of detected objects
