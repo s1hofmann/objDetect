@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 
 void showHelp()
 {
-    cout << "Usage: Evaluator" << endl;
+    cout << "Usage: opencv_evaluate" << endl;
     cout << "-cascade <cascade classifier *.xml file>" << endl;
     cout << "-positives <positive samples file>" << endl;
     cout << "[-scale <scaling factor>: Parameter specifying how much the image size is reduced at each image scale.]" << endl;
