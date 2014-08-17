@@ -88,8 +88,10 @@ int main(int argc, char **argv)
                     cv::Size min_size(min_width, min_height);
                     cv::Size max_size(max_width, max_height);
                     Evaluator eval(cascade.c_str(), positive.c_str(), verbose, show, scale, neighbours, min_size, max_size);
-                    eval.evaluate();
-                    return 0;
+                    if(!(eval.evaluate()))
+                    {
+                        return 0;
+                    }
                 }
             }
             else

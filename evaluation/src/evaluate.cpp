@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iostream>
 #include <exception>
+#include <ctime>
 
 // 2014-08-12 Simon Hofmann <mail@simon-hofmann.org>
 
@@ -139,6 +140,13 @@ int Evaluator::evaluate()
         }
     }
 
+    time_t start_time, end_time;
+
+    if(!(this->_show))
+    {
+        time(&start_time);
+    }
+
     // Loop over all positive samples
     for(int i = 0; i < this->positives.size(); ++i)
     {
@@ -224,6 +232,13 @@ int Evaluator::evaluate()
             inputImg.release();
         }
     }
+
+    if(!(this->_show))
+    {
+        time(&end_time);
+        this->_time = difftime(end_time, start_time);
+    }
+
     this->showResults();
     return 0;
 }
@@ -267,6 +282,10 @@ void Evaluator::showResults()
     cout << "-------------------------------------------------------" << endl;
     cout << endl << endl;
     cout << "Evaluated " << this->positives.size() << " samples." << endl;
+    if(!(this->_show))
+    {
+        cout << "Evaluation took " << this->_time << " seconds." << endl;
+    }
     cout << "-------------------------------------------------------" << endl;
     cout << "Total hits:\t| Total misses:\t| Total false positives:" << endl;
     cout << total_hits << "\t\t| " << total_misses << "\t\t| " << total_false_positives << endl;

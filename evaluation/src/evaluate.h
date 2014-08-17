@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <string>
+#include <ctime>
 
 /**
  * @brief Evaluator, a class to evaluate the precision of an OpenCV cascade classifier
@@ -80,6 +81,11 @@ class Evaluator
      * Max size of detected objects
      */
     cv::Size _max;
+
+    /**
+     * Used to measure calculation time
+     */
+    double _time = 0;
 
     /**
      *Stores bounding boxes of detected objects
