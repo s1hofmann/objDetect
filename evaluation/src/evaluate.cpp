@@ -150,7 +150,7 @@ int Evaluator::evaluate()
     // Loop over all positive samples
     for(int i = 0; i < this->positives.size(); ++i)
     {
-        Mat inputImg = imread(this->positives[i]->filename.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
+        Mat inputImg = imread(this->positives[i]->filename.c_str(), IMREAD_GRAYSCALE);
 
         this->positives[i]->no_misses = this->positives[i]->count;
         
@@ -220,7 +220,7 @@ int Evaluator::evaluate()
         if(this->_show)
         {
             resize(inputImg, inputImg, Size(1280,800), 1, 1);
-            cvNamedWindow("Output", CV_WINDOW_AUTOSIZE);
+            namedWindow("Output", WINDOW_AUTOSIZE);
             imshow("Output", inputImg);
 
             waitKey(0);
