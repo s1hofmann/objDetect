@@ -3,6 +3,7 @@
 # Date:   2014-08-13
 ##################################################
 
+NAME 	 = opencv_evaluate
 FLAGS    += `pkg-config --libs --cflags opencv`
 CFLAGS   += -g -std=c++11
 CC 	     = g++
@@ -20,5 +21,5 @@ bin/exception.o: ./src/exception.cpp
 	${CC} ${CFLAGS} -c ./src/exception.cpp -o ./bin/exception.o
 
 clean:
-	@rm .bin/*.o
-	@rm Evaluator
+	@rm ./bin/*.o
+	@rm ${NAME}
