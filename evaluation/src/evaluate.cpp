@@ -263,9 +263,15 @@ double Evaluator::checkOverlap(Rect positive, Rect detect)
 
 void Evaluator::showResults()
 {
+    // Format cout for double output
+    fixed;
+    cout.precision(4);
+
     long total_hits = 0;
     long total_misses = 0;
     long total_false_positives = 0;
+
+    long total_positives = 0;
 
     cout << "Evaluation done!" << endl;
     cout << endl;
@@ -276,6 +282,8 @@ void Evaluator::showResults()
         total_hits += this->positives[i]->no_hits;
         total_misses += this->positives[i]->no_misses;
         total_false_positives += this->positives[i]->no_false_positives;
+
+        total_positives += this->positives[i]->count;
 
         cout << this->positives[i]->no_hits << "\t| " << this->positives[i]->no_misses << "\t\t| " << this->positives[i]->no_false_positives << "\t\t\t| " << this->positives[i]->filename << endl;
     }
@@ -290,4 +298,9 @@ void Evaluator::showResults()
     cout << "Total hits:\t| Total misses:\t| Total false positives:" << endl;
     cout << total_hits << "\t\t| " << total_misses << "\t\t| " << total_false_positives << endl;
     cout << "-------------------------------------------------------" << endl;
+    if(total_positives)
+    {
+        cout << "Total hit ratio: " << ((double)total_hits/(double)total_positives)*100 << "%" << endl;
+    cout << "-------------------------------------------------------" << endl;
+    }
 }
