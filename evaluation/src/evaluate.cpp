@@ -93,6 +93,9 @@ int Evaluator::parsePositives(const char *posFile)
                             pos->hits.push_back(coord);
                         }
 
+                        // Amount of successfully parsed samples
+                        pos->count = pos->hits.size();
+
                         this->positives.push_back(pos);
                         ++count;
                     }
@@ -119,9 +122,10 @@ int Evaluator::parsePositives(const char *posFile)
     else
     {
         cerr << "Error opening file!" << endl;
+        return -1;
     }
 
-    return 0;
+    return count;
 }
 
 int Evaluator::evaluate()
@@ -152,7 +156,8 @@ int Evaluator::evaluate()
     {
         Mat inputImg = imread(this->positives[i]->filename.c_str(), IMREAD_GRAYSCALE);
 
-        this->positives[i]->no_misses = this->positives[i]->count;
+        // Initial amount of missed object == total amount of available objects
+        this->positives[i]->no_misses = this->positives[i]->hits.size();
         
         if(inputImg.empty())
         {
@@ -184,6 +189,10 @@ int Evaluator::evaluate()
                     }
                     if(this->checkOverlap(*this->positives[i]->hits[k], this->detects[j]))
                     {
+                        std::vector<Rect*>::iterator it = this->positives[i]->hits.begin();
+                        advance(it, k);
+                        this->positives[i]->hits.erase(it);
+
                         if(this->_verbose)
                         {
                             cout << "True hit." << endl;
