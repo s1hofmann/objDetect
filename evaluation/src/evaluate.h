@@ -21,6 +21,7 @@ struct positive
     std::string filename;
     int count = 0;
     std::vector <cv::Rect*> hits;
+    std::vector <bool> detected;
     long no_hits = 0;
     long no_misses = 0;
     long no_false_positives = 0;

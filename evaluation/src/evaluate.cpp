@@ -91,6 +91,7 @@ int Evaluator::parsePositives(const char *posFile)
                                 throw parseException("Error parsing coordinates!");
                             }
                             pos->hits.push_back(coord);
+                            pos->detected.push_back(false);
                         }
 
                         // Amount of successfully parsed samples
@@ -187,11 +188,11 @@ int Evaluator::evaluate()
                         cout << "Possible match" << endl;
                         cout << "dx: " << abs(this->positives[i]->hits[k]->x - this->detects[j].x) << " dy: " << abs(this->positives[i]->hits[k]->y - this->detects[j].y) << endl;
                     }
-                    if(this->checkOverlap(*this->positives[i]->hits[k], this->detects[j]))
+
+                    if(this->checkOverlap(*this->positives[i]->hits[k], this->detects[j]) and !(this->positives[i]->detected[k]))
                     {
-                        std::vector<Rect*>::iterator it = this->positives[i]->hits.begin();
-                        advance(it, k);
-                        this->positives[i]->hits.erase(it);
+                        // Set detected flag so the sample won't get detected twice
+                        this->positives[i]->detected[k] = true;
 
                         if(this->_verbose)
                         {
