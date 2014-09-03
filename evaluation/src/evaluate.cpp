@@ -90,7 +90,9 @@ int Evaluator::parsePositives(const char *posFile)
                             {
                                 throw parseException("Error parsing coordinates!");
                             }
+                            // Vector containing samples
                             pos->hits.push_back(coord);
+                            // Used to flag a sample as detected to avoid multiple detects.
                             pos->detected.push_back(false);
                         }
 
@@ -193,6 +195,13 @@ int Evaluator::evaluate()
                     {
                         // Set detected flag so the sample won't get detected twice
                         this->positives[i]->detected[k] = true;
+                        
+                        this->positives[i]->no_hits++;
+                        this->positives[i]->no_misses--;
+                        if(this->positives[i]->no_misses < 0)
+                        {
+                            this->positives[i]->no_misses = 0;
+                        }
 
                         if(this->_verbose)
                         {
@@ -206,12 +215,12 @@ int Evaluator::evaluate()
                             // White bounding box for defined objects
                             rectangle(inputImg, Point(this->positives[i]->hits[k]->x, this->positives[i]->hits[k]->y), Point(this->positives[i]->hits[k]->x+this->positives[i]->hits[k]->width, this->positives[i]->hits[k]->y+this->positives[i]->hits[k]->height), Scalar(255,255,255), 5);
                         }
-
-                        this->positives[i]->no_hits++;
-                        this->positives[i]->no_misses--;
-                        if(this->positives[i]->no_misses < 0)
+                    }
+                    else if(this->checkOverlap(*this->positives[i]->hits[k], this->detects[j]) and (this->positives[i]->detected[k]))
+                    {
+                        if(this->_verbose)
                         {
-                            this->positives[i]->no_misses = 0;
+                            cout << "Multiple detect, skipping." << endl;
                         }
                     }
                     else
@@ -273,7 +282,7 @@ double Evaluator::checkOverlap(Rect positive, Rect detect)
 
 void Evaluator::showResults()
 {
-    // Format cout for double output
+    // cout formatting
     fixed;
     cout.precision(4);
 
@@ -293,7 +302,7 @@ void Evaluator::showResults()
         total_misses += this->positives[i]->no_misses;
         total_false_positives += this->positives[i]->no_false_positives;
 
-        total_positives += this->positives[i]->count;
+        total_positives += this->positives[i]->hits.size();
 
         cout << this->positives[i]->no_hits << "\t| " << this->positives[i]->no_misses << "\t\t| " << this->positives[i]->no_false_positives << "\t\t\t| " << this->positives[i]->filename << endl;
     }
@@ -302,7 +311,7 @@ void Evaluator::showResults()
     cout << "Evaluated " << this->positives.size() << " samples." << endl;
     if(!(this->_show))
     {
-        cout << "Evaluation took " << this->_time << " seconds." << endl;
+        cout << "Evaluation took " << ((int)this->_time/3600) << " hours, " << ((int)this->_time%3600)/60 << " minutes and " << ((int)this->_time%3600)%60 << " seconds." << endl;
     }
     cout << "-------------------------------------------------------" << endl;
     cout << "Total hits:\t| Total misses:\t| Total false positives:" << endl;
@@ -311,6 +320,6 @@ void Evaluator::showResults()
     if(total_positives)
     {
         cout << "Total hit ratio: " << ((double)total_hits/(double)total_positives)*100 << "%" << endl;
-    cout << "-------------------------------------------------------" << endl;
+        cout << "-------------------------------------------------------" << endl;
     }
 }
