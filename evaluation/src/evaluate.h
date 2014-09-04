@@ -3,6 +3,7 @@
 
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "../../parser/src/fileParser.h"
 
 #include <vector>
 #include <string>
@@ -15,17 +16,6 @@
  * This class provides methods to evaluate cascade classifiers.
  * It runs a trained classifier and creates an overview on hits, misses and false positives.
  */
-
-struct positive
-{
-    std::string filename;
-    int count = 0;
-    std::vector <cv::Rect*> hits;
-    std::vector <bool> detected;
-    long no_hits = 0;
-    long no_misses = 0;
-    long no_false_positives = 0;
-};
 
 class Evaluator
 {
@@ -104,25 +94,14 @@ class Evaluator
     std::string posFile;
 
     /**
-     * Stores positive image data
-     */
-    std::vector <positive*> positives;
-
-    /**
-     * Free dynamically allocated memory
-     */
-    void freeMem();
-    
-    /**
-     * Parse files containing positive image samples as described in the CascadeClassifier documentation
-     * Returns number of successfully parsed samples
-     */
-    int parsePositives(const char *posFile);
-    
-    /**
      * Checks the percentage of overlapping of two rectangles
      */
     double checkOverlap(cv::Rect positive, cv::Rect detect);
+
+    /**
+     * Parser for positive samples
+     */
+    fileParser *parser;
 };
 
 #endif /* #ifndef EVALUATOR_H */

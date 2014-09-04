@@ -20,115 +20,23 @@ Evaluator::Evaluator(const char *cascade, const char *posFile, bool verbose, boo
 {
     this->posFile = string(posFile);
     this->cascadeFile = string(cascade);
+    this->parser = new fileParser(this->posFile.c_str());
+
+    int count = this->parser->parsePositives();
 
     if(this->_verbose)
     {
         cout << "Cascade file: " << this->cascadeFile << endl;
         cout << "Positive sample file: " << this->posFile << endl;
-    }
-
-    if(!(this->parsePositives(posFile)))
-    {
-        if(this->_verbose)
-        {
-            cout << "Successfully loaded " << this->positives.size() << " positive samples." << endl;
-        }
-    }
-    else
-    {
-        if(this->_verbose)
-        {
-            cerr << "Unable to load positive samples." << endl;
-        }
+        cout << "--" << endl;
+        cout << "Parsed " << count << " samples." << endl;
     }
 }
 
 Evaluator::~Evaluator()
 {
   // cleanup
-  this->freeMem();
-}
-
-void Evaluator::freeMem()
-{
-    for(int i = 0; i < this->positives.size(); ++i)
-    {
-        for(int j = 0; j < this->positives[i]->hits.size(); ++j)
-        {
-            delete this->positives[i]->hits[j];
-            this->positives[i]->hits.clear();
-        }
-        delete this->positives[i];
-        this->positives.clear();
-    }
-}
-
-int Evaluator::parsePositives(const char *posFile)
-{
-    string input;
-    ifstream inFile(posFile);
-
-    int count = 0;
-
-    if(inFile.is_open())
-    {
-        while(getline(inFile, input))
-        {
-            try
-            {
-                istringstream iss(input);
-                positive *pos = new positive;
-                
-                try
-                {
-                    if(iss >> pos->filename >> pos->count)
-                    {
-                        for(int i = 0; i < pos->count; ++i)
-                        {
-                            Rect *coord = new Rect;
-                            if(!(iss >> coord->x >> coord->y >> coord->width >> coord->height))
-                            {
-                                throw parseException("Error parsing coordinates!");
-                            }
-                            // Vector containing samples
-                            pos->hits.push_back(coord);
-                            // Used to flag a sample as detected to avoid multiple detects.
-                            pos->detected.push_back(false);
-                        }
-
-                        // Amount of successfully parsed samples
-                        pos->count = pos->hits.size();
-
-                        this->positives.push_back(pos);
-                        ++count;
-                    }
-                    else
-                    {
-                        throw parseException("Error parsing file information!");
-                    }
-                }
-                catch (parseException &pe)
-                {
-                    cerr << pe.what() << endl;
-                    break;
-                }
-            }
-            catch (bad_alloc &ba)
-            {
-                cerr << "Exception: " << ba.what() << endl;
-                this->freeMem();
-                return -1;
-            }
-        }
-        inFile.close();
-    }
-    else
-    {
-        cerr << "Error opening file!" << endl;
-        return -1;
-    }
-
-    return count;
+  delete this->parser;
 }
 
 int Evaluator::evaluate()
@@ -155,12 +63,12 @@ int Evaluator::evaluate()
     }
 
     // Loop over all positive samples
-    for(int i = 0; i < this->positives.size(); ++i)
+    for(int i = 0; i < this->parser->positives.size(); ++i)
     {
-        Mat inputImg = imread(this->positives[i]->filename.c_str(), IMREAD_GRAYSCALE);
+        Mat inputImg = imread(this->parser->positives[i]->filename.c_str(), IMREAD_GRAYSCALE);
 
         // Initial amount of missed object == total amount of available objects
-        this->positives[i]->no_misses = this->positives[i]->hits.size();
+        this->parser->positives[i]->no_misses = this->parser->positives[i]->hits.size();
         
         if(inputImg.empty())
         {
@@ -170,7 +78,7 @@ int Evaluator::evaluate()
         
         if(this->_verbose)
         {
-            cout << "Processing file: " << this->positives[i]->filename.c_str() << endl;
+            cout << "Processing file: " << this->parser->positives[i]->filename.c_str() << endl;
         }
         
         // CASCADE_DO_CANNY_PRUNING: Function uses Canny edge detector to reject some image regions that contain too few or too much edges and thus can not contain the searched object
@@ -180,27 +88,27 @@ int Evaluator::evaluate()
         for(int j = 0; j < this->detects.size(); ++j)
         {
             // Loop over every defined object in a positive sample
-            for(int k = 0; k < this->positives[i]->hits.size(); ++k)
+            for(int k = 0; k < this->parser->positives[i]->hits.size(); ++k)
             {
                 // Check local neighbourhood of defined positive for hits
-                if(abs(this->positives[i]->hits[k]->x - this->detects[j].x) < this->positives[i]->hits[k]->width/2 and abs(this->positives[i]->hits[k]->y - this->detects[j].y) < this->positives[i]->hits[k]->width/2)
+                if(abs(this->parser->positives[i]->hits[k]->x - this->detects[j].x) < this->parser->positives[i]->hits[k]->width/2 and abs(this->parser->positives[i]->hits[k]->y - this->detects[j].y) < this->parser->positives[i]->hits[k]->width/2)
                 {
                     if(this->_verbose)
                     {
                         cout << "Possible match" << endl;
-                        cout << "dx: " << abs(this->positives[i]->hits[k]->x - this->detects[j].x) << " dy: " << abs(this->positives[i]->hits[k]->y - this->detects[j].y) << endl;
+                        cout << "dx: " << abs(this->parser->positives[i]->hits[k]->x - this->detects[j].x) << " dy: " << abs(this->parser->positives[i]->hits[k]->y - this->detects[j].y) << endl;
                     }
 
-                    if(this->checkOverlap(*this->positives[i]->hits[k], this->detects[j]) and !(this->positives[i]->detected[k]))
+                    if(this->checkOverlap(*this->parser->positives[i]->hits[k], this->detects[j]) and !(this->parser->positives[i]->detected[k]))
                     {
                         // Set detected flag so the sample won't get detected twice
-                        this->positives[i]->detected[k] = true;
+                        this->parser->positives[i]->detected[k] = true;
                         
-                        this->positives[i]->no_hits++;
-                        this->positives[i]->no_misses--;
-                        if(this->positives[i]->no_misses < 0)
+                        this->parser->positives[i]->no_hits++;
+                        this->parser->positives[i]->no_misses--;
+                        if(this->parser->positives[i]->no_misses < 0)
                         {
-                            this->positives[i]->no_misses = 0;
+                            this->parser->positives[i]->no_misses = 0;
                         }
 
                         if(this->_verbose)
@@ -213,10 +121,10 @@ int Evaluator::evaluate()
                             // Black bounding box for detected objects
                             rectangle(inputImg, Point(this->detects[j].x, this->detects[j].y), Point(this->detects[j].x+this->detects[j].width, this->detects[j].y+this->detects[j].height), Scalar(0,0,0), 5);
                             // White bounding box for defined objects
-                            rectangle(inputImg, Point(this->positives[i]->hits[k]->x, this->positives[i]->hits[k]->y), Point(this->positives[i]->hits[k]->x+this->positives[i]->hits[k]->width, this->positives[i]->hits[k]->y+this->positives[i]->hits[k]->height), Scalar(255,255,255), 5);
+                            rectangle(inputImg, Point(this->parser->positives[i]->hits[k]->x, this->parser->positives[i]->hits[k]->y), Point(this->parser->positives[i]->hits[k]->x+this->parser->positives[i]->hits[k]->width, this->parser->positives[i]->hits[k]->y+this->parser->positives[i]->hits[k]->height), Scalar(255,255,255), 5);
                         }
                     }
-                    else if(this->checkOverlap(*this->positives[i]->hits[k], this->detects[j]) and (this->positives[i]->detected[k]))
+                    else if(this->checkOverlap(*this->parser->positives[i]->hits[k], this->detects[j]) and (this->parser->positives[i]->detected[k]))
                     {
                         if(this->_verbose)
                         {
@@ -229,7 +137,7 @@ int Evaluator::evaluate()
                         {
                             cout << "False positive." << endl;
                         }
-                        this->positives[i]->no_false_positives++;
+                        this->parser->positives[i]->no_false_positives++;
                     }
                 }
             }
@@ -296,19 +204,19 @@ void Evaluator::showResults()
     cout << endl;
     cout << "Hits:\t| Misses:\t| False positives:\t| File:" << endl;
     cout << "-------------------------------------------------------" << endl;
-    for(int i = 0; i < this->positives.size(); ++i)
+    for(int i = 0; i < this->parser->positives.size(); ++i)
     {
-        total_hits += this->positives[i]->no_hits;
-        total_misses += this->positives[i]->no_misses;
-        total_false_positives += this->positives[i]->no_false_positives;
+        total_hits += this->parser->positives[i]->no_hits;
+        total_misses += this->parser->positives[i]->no_misses;
+        total_false_positives += this->parser->positives[i]->no_false_positives;
 
-        total_positives += this->positives[i]->hits.size();
+        total_positives += this->parser->positives[i]->hits.size();
 
-        cout << this->positives[i]->no_hits << "\t| " << this->positives[i]->no_misses << "\t\t| " << this->positives[i]->no_false_positives << "\t\t\t| " << this->positives[i]->filename << endl;
+        cout << this->parser->positives[i]->no_hits << "\t| " << this->parser->positives[i]->no_misses << "\t\t| " << this->parser->positives[i]->no_false_positives << "\t\t\t| " << this->parser->positives[i]->filename << endl;
     }
     cout << "-------------------------------------------------------" << endl;
     cout << endl << endl;
-    cout << "Evaluated " << this->positives.size() << " samples." << endl;
+    cout << "Evaluated " << this->parser->positives.size() << " samples." << endl;
     if(!(this->_show))
     {
         cout << "Evaluation took " << ((int)this->_time/3600) << " hours, " << ((int)this->_time%3600)/60 << " minutes and " << ((int)this->_time%3600)%60 << " seconds." << endl;
