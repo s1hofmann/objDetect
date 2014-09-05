@@ -37,15 +37,25 @@ Hits:	| Misses:	| False positives:	| File:
 -------------------------------------------------------
 
 1	| 0		| 0			| $filename
+
 1	| 0		| 1			| $filename
+
 0	| 1		| 0			| $filename
+
 1	| 0		| 0			| $filename
+
 1	| 0		| 0			| $filename
+
 0	| 1		| 1			| $filename
+
 1	| 0		| 0			| $filename
+
 1	| 0		| 1			| $filename
+
 1	| 0		| 0			| $filename
+
 1	| 0		| 0			| $filename
+
 -------------------------------------------------------
 
 Evaluated 10 samples.
