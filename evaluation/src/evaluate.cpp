@@ -1,5 +1,4 @@
 #include "evaluate.h"
-#include "exception.h"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/objdetect/objdetect.hpp"
@@ -8,7 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <exception>
+#include <stdexcept>
 #include <ctime>
 
 // 2014-08-12 Simon Hofmann <mail@simon-hofmann.org>
@@ -16,7 +15,7 @@
 using namespace std;
 using namespace cv;
 
-Evaluator::Evaluator(const char *cascade, const char *posFile, bool verbose, bool show, double scale, double neighbours, Size min, Size max) : _verbose(verbose), _show(show), _scale(scale), _neighbours(neighbours), _min(min), _max(max)
+Evaluator::Evaluator(const char *cascade, const char *posFile, bool verbose, bool show, double scale, double neighbours, Size_<double> min, Size_<double> max, bool percent) : _verbose(verbose), _show(show), _scale(scale), _neighbours(neighbours), _min(min), _max(max), _percent(percent)
 {
     this->posFile = string(posFile);
     this->cascadeFile = string(cascade);
@@ -66,6 +65,7 @@ int Evaluator::evaluate()
     for(int i = 0; i < this->parser->positives.size(); ++i)
     {
         Mat inputImg = imread(this->parser->positives[i]->filename.c_str(), IMREAD_GRAYSCALE);
+        Size_<double> min, max;
 
         // Initial amount of missed object == total amount of available objects
         this->parser->positives[i]->no_misses = this->parser->positives[i]->hits.size();
@@ -80,9 +80,28 @@ int Evaluator::evaluate()
         {
             cout << "Processing file: " << this->parser->positives[i]->filename.c_str() << endl;
         }
-        
+
+        if(this->_percent)
+        {
+            min = Size_<double>(inputImg.size().width * this->_min.width, inputImg.size().height * this->_min.height);
+            max = Size_<double>(inputImg.size().width * this->_max.width, inputImg.size().height * this->_max.height);
+        }
+        else
+        {
+            min = this->_min;
+            max = this->_max;
+        }
+
         // CASCADE_DO_CANNY_PRUNING: Function uses Canny edge detector to reject some image regions that contain too few or too much edges and thus can not contain the searched object
-        classify.detectMultiScale(inputImg, this->detects, this->_scale, this->_neighbours, CASCADE_SCALE_IMAGE|CASCADE_DO_CANNY_PRUNING, this->_min, this->_max);
+        
+        try
+        {
+            classify.detectMultiScale(inputImg, this->detects, this->_scale, this->_neighbours, CASCADE_SCALE_IMAGE|CASCADE_DO_CANNY_PRUNING, min, max);
+        }
+        catch (out_of_range)
+        {
+            cerr << "ERROR! Something ran out of bounds while searching for objects." << endl;
+        }
 
         // Loop over every detected object in an image
         for(int j = 0; j < this->detects.size(); ++j)

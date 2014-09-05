@@ -24,7 +24,7 @@ class Evaluator
     /**
      * Default constructor
      */
-    Evaluator(const char *cascade, const char *posFile, bool verbose=false, bool show = false, double scale = 1.1, double neighbours = 3, cv::Size min = cv::Size(0,0), cv::Size max = cv::Size(0,0));
+    Evaluator(const char *cascade, const char *posFile, bool verbose=false, bool show = false, double scale = 1.1, double neighbours = 3, cv::Size_<double> min = cv::Size_<double>(0,0), cv::Size_<double> max = cv::Size_<double>(0,0), bool percent = false);
 
     /**
      * Destructor
@@ -66,12 +66,17 @@ class Evaluator
     /**
      * Min. size of detected objects
      */
-    cv::Size _min;
+    cv::Size_<double> _min;
 
     /**
      * Max size of detected objects
      */
-    cv::Size _max;
+    cv::Size_<double> _max;
+
+    /**
+     * Min and max size are entered in percent
+     */
+    bool _percent;
 
     /**
      * Used to measure calculation time
