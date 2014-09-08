@@ -134,8 +134,8 @@ void showHelp()
     cout << "-cascade <cascade classifier *.xml file>" << endl;
     cout << "-positives <positive samples file>" << endl;
     cout << "[-scale <scaling factor>: Parameter specifying how much the image size is reduced at each image scale.]" << endl;
-    cout << "[-neighbours <count>: Parameter specifying how many neighbors each candidate rectangle should have to retain it." << endl; 
-    cout << "[-percent: If this flag is activated minimum and maximum object size are given as a percentual value between 0 and 1." << endl; 
+    cout << "[-neighbours <count>: Parameter specifying how many neighbors each candidate rectangle should have to retain it.]" << endl; 
+    cout << "[-percent: If this flag is activated minimum and maximum object size are given as a percentual value between 0 and 1.]" << endl; 
     cout << "[-minw <minimal width>: Minimum object width, smaller objects will be discarded.]" << endl;
     cout << "[-minh <minimal height>: Minimum object height, smaller objects will be discarded.]" << endl;
     cout << "[-maxw <minimal width>: Maximum object width, larger objects will be discarded.]" << endl;
