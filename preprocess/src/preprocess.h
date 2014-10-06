@@ -35,7 +35,8 @@ class Preprocessor
     /**
      * Creates a tiles background image for further processing
      */
-    Mat tile(Mat tile, Size output_size);
+    Mat tile(Mat &tile, Size output_size);
+    Mat bckg;
 
     /**
      * Destructor
@@ -47,6 +48,10 @@ class Preprocessor
      * Parser object
      */
     fileParser *parser;
+
+    /**
+     * Background Mat
+     */
 
 };
 

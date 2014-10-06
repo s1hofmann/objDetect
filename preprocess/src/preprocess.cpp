@@ -13,6 +13,7 @@ Preprocessor::Preprocessor(const char *positives, const char *background)
 {
     this->parser = new fileParser(positives);
     this->parser->parsePositives();
+    this->bckg = imread(background);
 }
 
 int Preprocessor::process()
@@ -56,9 +57,47 @@ int Preprocessor::process()
     return count;
 }
 
-//TODO: Create an image twice the size of the input image which is used as background for further processing.
-Mat Preprocessor::tile(Mat tile, Size output_size)
+Mat Preprocessor::tile(Mat &tile, Size output_size)
 {
+    Mat output = Mat::zeros(output_size, tile.type());
+
+    int width = output_size.width / tile.cols;
+    int height = output_size.height / tile.rows;
+
+    int remaining_width = output_size.width % tile.cols;
+    int remaining_height = output_size.height % tile.rows;
+
+    cout << width << " " << height << endl;
+    cout << remaining_width << " " << remaining_height << endl;
+    
+    //Amount of tiles which fit the image
+    for(int i = 0; i < width; ++i)
+    {
+        for(int j = 0; j < height; ++j)
+        {
+            tile.copyTo(output(Rect(i*tile.cols, j*tile.rows, tile.cols, tile.rows)));
+            
+            if(remaining_height and remaining_width)
+            {
+                //Fills right space
+                tile(Rect(0, 0, remaining_width, tile.rows)).copyTo(output(Rect(width*tile.cols, j*tile.rows, remaining_width, tile.rows)));
+                //Fills bottom space
+                tile(Rect(0, 0, tile.cols, remaining_height)).copyTo(output(Rect(i*tile.cols, height*tile.rows, tile.cols, remaining_height)));
+                //Fills the remaining corner part
+                tile(Rect(0, 0, remaining_width, remaining_height)).copyTo(output(Rect(width*tile.cols, height*tile.rows, remaining_width, remaining_height)));
+            }
+            else if(remaining_height)
+            {
+                tile(Rect(0, 0, tile.cols, remaining_height)).copyTo(output(Rect(i*tile.cols, height*tile.rows, tile.cols, remaining_height)));
+            }
+            else if(remaining_width)
+            {
+                tile(Rect(0, 0, remaining_width, tile.rows)).copyTo(output(Rect(width*tile.cols, j*tile.rows, remaining_width, tile.rows)));
+            }
+        }
+    }
+
+    return output;
 }
 
 Preprocessor::~Preprocessor()

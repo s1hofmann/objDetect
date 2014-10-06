@@ -19,8 +19,14 @@ int main(int argc, char **argv)
     }
     else
     {
-        Preprocessor test(argv[1]);
-        cout << test.process() << endl;
+        Preprocessor test(argv[1], argv[2]);
+        cv::Size tmp = cv::Size(1000, 500);
+        cv::Mat test_mat = test.tile(test.bckg, tmp);
+
+        cv::namedWindow("output");
+        cv::imshow("output", test_mat);
+        cv::waitKey(0);
+        //cout << test.process() << endl;
 
         //for (int i = 1; i < argc; i++)
         //{
