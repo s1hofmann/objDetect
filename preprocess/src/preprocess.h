@@ -6,6 +6,9 @@
 
 #include "../../parser/src/fileParser.h"
 
+using namespace std;
+using namespace cv;
+
 /**
  * @brief Preprocessor ... short description ...
  * @author Simon Hofmann <mail@simon-hofmann.org>
@@ -20,7 +23,19 @@ class Preprocessor
     /**
      * Default constructor
      */
-    Preprocessor();
+    //TODO: Preprocessor need marked positives, a background image of arbitrary size and some parameters.
+    Preprocessor(const char *positives, const char *background);
+
+    /**
+     * Create some rotated and distorted images for each positive sample.
+     * Returns total number of created images.
+     */
+    int process();
+    
+    /**
+     * Creates a tiles background image for further processing
+     */
+    Mat tile(Mat tile, Size output_size);
 
     /**
      * Destructor
