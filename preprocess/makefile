@@ -8,7 +8,7 @@ FLAGS    += `pkg-config --libs --cflags opencv`
 CFLAGS   += -g -std=c++11
 CC 	     = g++
 
-Eval: ./bin/main.o ./bin/preprocess.o ./bin/exception.o ./bin/parser.o
+Preprocess: ./bin/main.o ./bin/preprocess.o ./bin/exception.o ./bin/parser.o
 	${CC} ${FLAGS} ${CFLAGS} ./bin/main.o ./bin/preprocess.o ./bin/exception.o ./bin/parser.o -o ${NAME}
 
 bin/main.o: ./src/main.cpp
