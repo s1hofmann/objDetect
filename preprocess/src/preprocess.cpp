@@ -3,7 +3,9 @@
 #include "opencv2/imgproc/imgproc.hpp"
 
 #include <iostream>
+#include <fstream>
 #include <string>
+#include <exception>
 #include <time.h>
 
 // 2014-09-04 Simon Hofmann <mail@simon-hofmann.org>
@@ -22,35 +24,55 @@ Preprocessor::Preprocessor(string output, string positives, string background, i
 int Preprocessor::process()
 {
     int count = 0;
-
-    for(auto entry : this->parser->positives)
+    try
     {
-        Mat bigImage = imread(entry->filename);
-        for(auto img : entry->hits)
+        string list;
+        list = this->out_dir + "/positive.dat";
+
+        ofstream filelist;
+        filelist.exceptions(ofstream::failbit | ofstream::badbit);
+
+        //Empty a possibliy existing filelist
+        filelist.open(list.c_str(), ofstream::out | ofstream::trunc);
+
+        for(auto entry : this->parser->positives)
         {
-            Mat bounding_box= Mat(bigImage, Rect(img->x, img->y, img->width, img->height));
-            
-            for(int i = 0; i < this->amount; ++i)
+            Mat bigImage = imread(entry->filename);
+            for(auto img : entry->hits)
             {
-                this->output = transform(bounding_box);
-
-                stringstream filename;
+                Mat bounding_box= Mat(bigImage, Rect(img->x, img->y, img->width, img->height));
                 
-                filename << this->out_dir << "/pos_" << count << ".png";
-                imwrite(filename.str(), output);
-
-                count++;
-
-                filename.clear();
-
-                if(this->show)
+                for(int i = 0; i < this->amount; ++i)
                 {
-                    namedWindow("output");
-                    imshow("output", output);
-                    waitKey(0);
+                    this->output = transform(bounding_box);
+
+                    stringstream filename;
+                    
+                    filename << this->out_dir << "/pos_" << count << ".png";
+                    imwrite(filename.str(), output);
+                    filelist << filename.str() << " " << 1 << " " << 0 << " " << 0 << " " << this->output.cols << " " << this->output.rows << endl;
+
+                    count++;
+
+                    filename.clear();
+
+                    if(this->show)
+                    {
+                        namedWindow("output");
+                        imshow("output", output);
+                        waitKey(0);
+                    }
                 }
             }
         }
+
+        filelist.close();
+
+    }
+    catch (ofstream::failure e)
+    {
+        cerr << "File I/O error!" << endl;
+        return -1;
     }
 
     return count;
