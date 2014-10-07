@@ -1,5 +1,4 @@
-#ifndef EVALUATOR_H
-#define EVALUATOR_H
+#pragma once
 
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -24,7 +23,7 @@ class Evaluator
     /**
      * Default constructor
      */
-    Evaluator(const char *cascade, const char *posFile, bool verbose=false, bool show = false, double scale = 1.1, double neighbours = 3, cv::Size_<double> min = cv::Size_<double>(0,0), cv::Size_<double> max = cv::Size_<double>(0,0), bool percent = false);
+    Evaluator(std::string cascade, std::string positive, bool verbose=false, bool show = false, double scale = 1.1, double neighbours = 3, cv::Size_<double> min = cv::Size_<double>(0,0), cv::Size_<double> max = cv::Size_<double>(0,0), bool percent = false);
 
     /**
      * Destructor
@@ -108,5 +107,3 @@ class Evaluator
      */
     fileParser *parser;
 };
-
-#endif /* #ifndef EVALUATOR_H */

@@ -28,6 +28,7 @@ int main(int argc, char **argv)
     if(argc < 2)
     {
         showHelp();
+        return -1;
     }
     else
     {
@@ -80,7 +81,7 @@ int main(int argc, char **argv)
             else if (!(strcmp(argv[i],"-h")))
             {
                 showHelp();
-                return 1;
+                return -1;
             }
         }
 
@@ -95,7 +96,7 @@ int main(int argc, char **argv)
                         cv::Size_<double> min_size(min_width, min_height);
                         cv::Size_<double> max_size(max_width, max_height);
 
-                        Evaluator eval(cascade.c_str(), positive.c_str(), verbose, show, scale, neighbours, min_size, max_size, percent);
+                        Evaluator eval(cascade, positive, verbose, show, scale, neighbours, min_size, max_size, percent);
                         if(!(eval.evaluate()))
                         {
                             return 0;
@@ -123,7 +124,7 @@ int main(int argc, char **argv)
         {
             cerr << "Arguments missing!" << endl;
             showHelp();
-            return 1;
+            return -1;
         }
     }
 }

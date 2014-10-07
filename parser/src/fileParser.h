@@ -1,5 +1,4 @@
-#ifndef FILEPARSER_H 
-#define FILEPARSER_H 
+#pragma once
 
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -31,7 +30,7 @@ class fileParser
     /**
      * Default constructor
      */
-    fileParser(const char *posFile);
+    fileParser(std::string posFile);
 
     /**
      * Destructor
@@ -61,5 +60,3 @@ class fileParser
     void freeMem();
     
 };
-
-#endif /* #ifndef FILEPARSER_H*/

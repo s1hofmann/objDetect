@@ -16,7 +16,7 @@ using namespace cv;
 Preprocessor::Preprocessor(string output, string positives, string background, int num, int min_rotation, int max_rotation, bool show) : out_dir(output), amount(num), min_rot(min_rotation), max_rot(max_rotation), show(show)
 {
     srand(time(NULL));
-    this->parser = new fileParser(positives.c_str());
+    this->parser = new fileParser(positives);
     this->parser->parsePositives();
     this->bckg = imread(background.c_str());
 }

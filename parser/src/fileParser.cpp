@@ -12,9 +12,9 @@
 using namespace std;
 using namespace cv;
 
-fileParser::fileParser(const char *posFile)
+fileParser::fileParser(string posFile)
 {
-    this->posFile = string(posFile);
+    this->posFile = posFile;
 }
 
 fileParser::~fileParser()

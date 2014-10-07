@@ -4,6 +4,7 @@
 #include "opencv2/objdetect/objdetect.hpp"
 
 #include <cstdlib>
+#include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -15,10 +16,8 @@
 using namespace std;
 using namespace cv;
 
-Evaluator::Evaluator(const char *cascade, const char *posFile, bool verbose, bool show, double scale, double neighbours, Size_<double> min, Size_<double> max, bool percent) : _verbose(verbose), _show(show), _scale(scale), _neighbours(neighbours), _min(min), _max(max), _percent(percent)
+Evaluator::Evaluator(string cascade, string positive, bool verbose, bool show, double scale, double neighbours, Size_<double> min, Size_<double> max, bool percent) : posFile(positive), cascadeFile(cascade), _verbose(verbose), _show(show), _scale(scale), _neighbours(neighbours), _min(min), _max(max), _percent(percent)
 {
-    this->posFile = string(posFile);
-    this->cascadeFile = string(cascade);
     this->parser = new fileParser(this->posFile.c_str());
 
     int count = this->parser->parsePositives();
