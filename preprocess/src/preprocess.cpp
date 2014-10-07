@@ -121,7 +121,13 @@ Mat Preprocessor::tile(const Mat &tile, Size output_size)
 Mat Preprocessor::transform(const Mat &input)
 {
     Mat out = tile(this->bckg, Size(input.cols*2, input.rows*2));
-    int angle = this->min_rot + rand()%(this->max_rot-this->min_rot);
+
+    int angle = 0;
+
+    if(this->max_rot != 0 and this->min_rot != 0 and this->max_rot != this->min_rot)
+    {
+        angle = this->min_rot + rand()%(this->max_rot-this->min_rot);
+    }
 
     input.copyTo(out(Rect(out.cols/4, out.rows/4, input.cols, input.rows)));
     
