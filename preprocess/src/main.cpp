@@ -14,7 +14,7 @@ int main(int argc, char **argv)
     string positive;
     string background;
 
-    int rmin = 0;
+    int rmin = 1;
     int rmax = 360;
     int amount = 3;
     
@@ -66,17 +66,24 @@ int main(int argc, char **argv)
     
         if(!(output.empty() or positive.empty() or background.empty()))
         {
-            if(amount > 0)
+            if(rmin != 0 and rmax != 0)
             {
-                Preprocessor test(output, positive, background, amount, rmin, rmax, show);
-                if(test.process())
+                if(amount > 0)
                 {
-                    return 0;
+                    Preprocessor test(output, positive, background, amount, rmin, rmax, show);
+                    if(test.process())
+                    {
+                        return 0;
+                    }
+                    else
+                    {
+                        return -1;
+                    }
                 }
-                else
-                {
-                    return -1;
-                }
+            }
+            else
+            {
+                cerr << "Rotation angles should not be 0!" << endl;
             }
         }
         else

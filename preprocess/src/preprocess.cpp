@@ -6,7 +6,8 @@
 #include <fstream>
 #include <string>
 #include <exception>
-#include <time.h>
+#include <ctime>
+#include <cmath>
 
 // 2014-09-04 Simon Hofmann <mail@simon-hofmann.org>
 
@@ -120,7 +121,9 @@ Mat Preprocessor::tile(const Mat &tile, Size output_size)
 
 Mat Preprocessor::transform(const Mat &input)
 {
-    Mat out = tile(this->bckg, Size(input.cols*2, input.rows*2));
+    int max_len = sqrt(input.cols*input.cols+input.rows*input.rows);
+    
+    Mat out = tile(this->bckg, Size(max_len*2, max_len*2));
 
     int angle = 0;
 
@@ -129,23 +132,12 @@ Mat Preprocessor::transform(const Mat &input)
         angle = this->min_rot + rand()%(this->max_rot-this->min_rot);
     }
 
-    input.copyTo(out(Rect(out.cols/4, out.rows/4, input.cols, input.rows)));
+    input.copyTo(out(Rect(out.cols/2-(input.cols/2), out.rows/2-(input.rows/2), input.cols, input.rows)));
     
     Mat rotation = getRotationMatrix2D(Point2f(out.cols/2, out.rows/2), angle , 1);
     warpAffine(out, out, rotation, out.size());
-    
-    if(input.cols > input.rows)
-    {
-        out = Mat(out, Rect((out.cols/2)-(input.cols/2), (out.rows/2)-(input.cols/2), input.cols, input.cols));
-    }
-    else if(input.cols < input.rows)
-    {
-        out = Mat(out, Rect((out.cols/2)-(input.rows/2), (out.rows/2)-(input.rows/2), input.rows, input.rows));
-    }
-    else
-    {
-        out = Mat(out, Rect((out.cols/2)-(input.cols/2), (out.rows/2)-(input.cols/2), input.cols, input.cols));
-    }
+
+    out = Mat(out, Rect((out.cols/2)-max_len/2, (out.rows/2)-max_len/2, max_len, max_len));
 
     return out;
 }

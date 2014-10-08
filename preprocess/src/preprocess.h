@@ -34,7 +34,7 @@ class Preprocessor
      * max_rotation: Maximal rotation value
      * show: Shows transformed images
      */
-    Preprocessor(string output, string positives, string background, int num = 1, int min_rotation = 0, int max_rotation = 360, bool show = false);
+    Preprocessor(string output, string positives, string background, int num = 1, int min_rotation = 1, int max_rotation = 360, bool show = false);
 
     /**
      * Create some rotated and distorted images for each positive sample.
