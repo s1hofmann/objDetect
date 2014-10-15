@@ -45,42 +45,42 @@ class Evaluator
     /**
      *Verbose mode - more detailed output
      */
-    bool _verbose;
+    bool verbose_;
 
     /**
      *Show image with bounding boxes of defined and detected elements
      */
-    bool _show;
+    bool show_;
 
     /**
      * Scale factor for cascade classifier
      */
-    double _scale;
+    double scale_;
     
     /**
      * Min. no. of neighbours for positive hit
      */
-    double _neighbours;
+    double neighbours_;
 
     /**
      * Min. size of detected objects
      */
-    cv::Size_<double> _min;
+    cv::Size_<double> min_;
 
     /**
      * Max size of detected objects
      */
-    cv::Size_<double> _max;
+    cv::Size_<double> max_;
 
     /**
      * Min and max size are entered in percent
      */
-    bool _percent;
+    bool percent_;
 
     /**
      * Used to measure calculation time
      */
-    double _time = 0;
+    double time_ = 0;
 
     /**
      * Stores bounding boxes of detected objects

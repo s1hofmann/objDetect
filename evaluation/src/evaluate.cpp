@@ -13,16 +13,22 @@
 
 // 2014-08-12 Simon Hofmann <mail@simon-hofmann.org>
 
-using namespace std;
+using std::cout;
+using std::cerr;
+using std::endl;
+using std::fixed;
+using std::string;
+using std::out_of_range;
+
 using namespace cv;
 
-Evaluator::Evaluator(string cascade, string positive, bool verbose, bool show, double scale, double neighbours, Size_<double> min, Size_<double> max, bool percent) : posFile(positive), cascadeFile(cascade), _verbose(verbose), _show(show), _scale(scale), _neighbours(neighbours), _min(min), _max(max), _percent(percent)
+Evaluator::Evaluator(string cascade, string positive, bool verbose, bool show, double scale, double neighbours, Size_<double> min, Size_<double> max, bool percent) : posFile(positive), cascadeFile(cascade), verbose_(verbose), show_(show), scale_(scale), neighbours_(neighbours), min_(min), max_(max), percent_(percent)
 {
     this->parser = new fileParser(this->posFile.c_str());
 
     int count = this->parser->parsePositives();
 
-    if(this->_verbose)
+    if(this->verbose_)
     {
         cout << "Cascade file: " << this->cascadeFile << endl;
         cout << "Positive sample file: " << this->posFile << endl;
@@ -47,7 +53,7 @@ int Evaluator::evaluate()
     }
     else
     {
-        if(this->_verbose)
+        if(this->verbose_)
         {
             cout << "Cascade loaded!" << endl;
         }
@@ -55,7 +61,7 @@ int Evaluator::evaluate()
 
     time_t start_time, end_time;
 
-    if(!(this->_show))
+    if(!(this->show_))
     {
         time(&start_time);
     }
@@ -75,27 +81,27 @@ int Evaluator::evaluate()
             return -1;
         }
         
-        if(this->_verbose)
+        if(this->verbose_)
         {
             cout << "Processing file: " << this->parser->positives[i]->filename.c_str() << endl;
         }
 
-        if(this->_percent)
+        if(this->percent_)
         {
-            min = Size_<double>(inputImg.size().width * this->_min.width, inputImg.size().height * this->_min.height);
-            max = Size_<double>(inputImg.size().width * this->_max.width, inputImg.size().height * this->_max.height);
+            min = Size_<double>(inputImg.size().width * this->min_.width, inputImg.size().height * this->min_.height);
+            max = Size_<double>(inputImg.size().width * this->max_.width, inputImg.size().height * this->max_.height);
         }
         else
         {
-            min = this->_min;
-            max = this->_max;
+            min = this->min_;
+            max = this->max_;
         }
 
         // CASCADE_DO_CANNY_PRUNING: Function uses Canny edge detector to reject some image regions that contain too few or too much edges and thus can not contain the searched object
         
         try
         {
-            classify.detectMultiScale(inputImg, this->detects, this->_scale, this->_neighbours, CASCADE_SCALE_IMAGE|CASCADE_DO_CANNY_PRUNING, min, max);
+            classify.detectMultiScale(inputImg, this->detects, this->scale_, this->neighbours_, CASCADE_SCALE_IMAGE|CASCADE_DO_CANNY_PRUNING, min, max);
         }
         catch (out_of_range)
         {
@@ -111,7 +117,7 @@ int Evaluator::evaluate()
                 // Check local neighbourhood of defined positive for hits
                 if(abs(this->parser->positives[i]->hits[k]->x - this->detects[j].x) < this->parser->positives[i]->hits[k]->width/2 and abs(this->parser->positives[i]->hits[k]->y - this->detects[j].y) < this->parser->positives[i]->hits[k]->width/2)
                 {
-                    if(this->_verbose)
+                    if(this->verbose_)
                     {
                         cout << "Possible match" << endl;
                         cout << "dx: " << abs(this->parser->positives[i]->hits[k]->x - this->detects[j].x) << " dy: " << abs(this->parser->positives[i]->hits[k]->y - this->detects[j].y) << endl;
@@ -129,12 +135,12 @@ int Evaluator::evaluate()
                             this->parser->positives[i]->no_misses = 0;
                         }
 
-                        if(this->_verbose)
+                        if(this->verbose_)
                         {
                             cout << "True hit." << endl;
                         }
                         
-                        if(this->_show)
+                        if(this->show_)
                         {
                             // Black bounding box for detected objects
                             rectangle(inputImg, Point(this->detects[j].x, this->detects[j].y), Point(this->detects[j].x+this->detects[j].width, this->detects[j].y+this->detects[j].height), Scalar(0,0,0), 5);
@@ -144,14 +150,14 @@ int Evaluator::evaluate()
                     }
                     else if(this->checkOverlap(*this->parser->positives[i]->hits[k], this->detects[j]) and (this->parser->positives[i]->detected[k]))
                     {
-                        if(this->_verbose)
+                        if(this->verbose_)
                         {
                             cout << "Multiple detect, skipping." << endl;
                         }
                     }
                     else
                     {
-                        if(this->_verbose)
+                        if(this->verbose_)
                         {
                             cout << "False positive." << endl;
                         }
@@ -162,7 +168,7 @@ int Evaluator::evaluate()
         }
 
         // Display image showing defined and detected objects
-        if(this->_show)
+        if(this->show_)
         {
             resize(inputImg, inputImg, Size(1280,800), 1, 1);
             namedWindow("Output", WINDOW_AUTOSIZE);
@@ -178,10 +184,10 @@ int Evaluator::evaluate()
         }
     }
 
-    if(!(this->_show))
+    if(!(this->show_))
     {
         time(&end_time);
-        this->_time = difftime(end_time, start_time);
+        this->time_ = difftime(end_time, start_time);
     }
 
     this->showResults();
@@ -235,9 +241,9 @@ void Evaluator::showResults()
     cout << "-------------------------------------------------------" << endl;
     cout << endl << endl;
     cout << "Evaluated " << this->parser->positives.size() << " samples." << endl;
-    if(!(this->_show))
+    if(!(this->show_))
     {
-        cout << "Evaluation took " << ((int)this->_time/3600) << " hours, " << ((int)this->_time%3600)/60 << " minutes and " << ((int)this->_time%3600)%60 << " seconds." << endl;
+        cout << "Evaluation took " << ((int)this->time_/3600) << " hours, " << ((int)this->time_%3600)/60 << " minutes and " << ((int)this->time_%3600)%60 << " seconds." << endl;
     }
     cout << "-------------------------------------------------------" << endl;
     cout << "Total hits:\t| Total misses:\t| Total false positives:" << endl;

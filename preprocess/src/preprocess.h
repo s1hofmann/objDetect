@@ -11,13 +11,13 @@ using namespace std;
 using namespace cv;
 
 /**
- * @brief Preprocessor
+ * @brief PreProcessor
  * @author Simon Hofmann <mail@simon-hofmann.org>
  * @date 2014-09-04
- * The Preprocessor class provides methods to generate multiple transformed images from one defined bounding box in order to increase the total amount of positive samples
+ * The PreProcessor class provides methods to generate multiple transformed images from one defined bounding box in order to increase the total amount of positive samples
  */
 
-class Preprocessor
+class PreProcessor
 {
   public:
 
@@ -34,7 +34,7 @@ class Preprocessor
      * max_rotation: Maximal rotation value
      * show: Shows transformed images
      */
-    Preprocessor(string output, string positives, string background, int num = 1, int min_rotation = 1, int max_rotation = 360, bool show = false);
+    PreProcessor(string output_dir, string positives_file, string background_img, int num_of_samples = 1, int min_rotation = 1, int max_rotation = 360, bool show = false);
 
     /**
      * Create some rotated and distorted images for each positive sample.
@@ -45,7 +45,7 @@ class Preprocessor
     /**
      * Destructor
      */
-    virtual ~Preprocessor();
+    virtual ~PreProcessor();
 
   private:
     /**
@@ -61,41 +61,41 @@ class Preprocessor
     /**
      * Parser object
      */
-    fileParser *parser;
+    fileParser *parser_;
 
     /**
      * Output directory
      */
-    string out_dir;
+    string out_dir_;
 
     /**
      * Background Mat
      */
-    Mat bckg;
+    Mat bckg_;
 
     /**
      * Output Mat
      */
-    Mat output;
+    Mat output_;
 
     /**
      * Number of transformed images to generate
      */
-    int amount;
+    int amount_;
 
     /**
      * Minimum amount of rotation
      */
-    int min_rot;
+    int min_rot_;
 
     /**
      * Maximum amount of rotation
      */
-    int max_rot;
+    int max_rot_;
     
     /**
      * Verbose mode, show generated images
      */
-    bool show;
+    bool show_;
 
 };

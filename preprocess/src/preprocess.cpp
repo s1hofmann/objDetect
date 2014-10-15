@@ -14,21 +14,21 @@
 using namespace std;
 using namespace cv;
 
-Preprocessor::Preprocessor(string output, string positives, string background, int num, int min_rotation, int max_rotation, bool show) : out_dir(output), amount(num), min_rot(min_rotation), max_rot(max_rotation), show(show)
+PreProcessor::PreProcessor(string out_dir, string positives_file, string background_img, int num_of_samples, int min_rotation, int max_rotation, bool show) : out_dir_(out_dir), amount_(num_of_samples), min_rot_(min_rotation), max_rot_(max_rotation), show_(show)
 {
     srand(time(NULL));
-    this->parser = new fileParser(positives);
-    this->parser->parsePositives();
-    this->bckg = imread(background.c_str());
+    this->parser_ = new fileParser(positives_file);
+    this->parser_->parsePositives();
+    this->bckg_ = imread(background_img.c_str());
 }
 
-int Preprocessor::process()
+int PreProcessor::process()
 {
     int count = 0;
     try
     {
         string list;
-        list = this->out_dir + "/positive.dat";
+        list = this->out_dir_ + "/positive.dat";
 
         ofstream filelist;
         filelist.exceptions(ofstream::failbit | ofstream::badbit);
@@ -36,31 +36,31 @@ int Preprocessor::process()
         //Empty a possibliy existing filelist
         filelist.open(list.c_str(), ofstream::out | ofstream::trunc);
 
-        for(auto entry : this->parser->positives)
+        for(auto entry : this->parser_->positives)
         {
             Mat bigImage = imread(entry->filename);
             for(auto img : entry->hits)
             {
                 Mat bounding_box= Mat(bigImage, Rect(img->x, img->y, img->width, img->height));
                 
-                for(int i = 0; i < this->amount; ++i)
+                for(int i = 0; i < this->amount_; ++i)
                 {
-                    this->output = transform(bounding_box);
+                    this->output_ = transform(bounding_box);
 
                     stringstream filename;
                     
-                    filename << this->out_dir << "/pos_" << count << ".png";
-                    imwrite(filename.str(), output);
-                    filelist << filename.str() << " " << 1 << " " << 0 << " " << 0 << " " << this->output.cols << " " << this->output.rows << endl;
+                    filename << this->out_dir_ << "/pos_" << count << ".png";
+                    imwrite(filename.str(), this->output_);
+                    filelist << filename.str() << " " << 1 << " " << 0 << " " << 0 << " " << this->output_.cols << " " << this->output_.rows << endl;
 
                     count++;
 
                     filename.clear();
 
-                    if(this->show)
+                    if(this->show_)
                     {
                         namedWindow("output");
-                        imshow("output", output);
+                        imshow("output", this->output_);
                         waitKey(0);
                     }
                 }
@@ -79,7 +79,7 @@ int Preprocessor::process()
     return count;
 }
 
-Mat Preprocessor::tile(const Mat &tile, Size output_size)
+Mat PreProcessor::tile(const Mat &tile, Size output_size)
 {
     Mat output = Mat::zeros(output_size, tile.type());
 
@@ -119,17 +119,17 @@ Mat Preprocessor::tile(const Mat &tile, Size output_size)
     return output;
 }
 
-Mat Preprocessor::transform(const Mat &input)
+Mat PreProcessor::transform(const Mat &input)
 {
     int max_len = sqrt(input.cols*input.cols+input.rows*input.rows);
     
-    Mat out = tile(this->bckg, Size(max_len*2, max_len*2));
+    Mat out = tile(this->bckg_, Size(max_len*2, max_len*2));
 
     int angle = 0;
 
-    if(this->max_rot != 0 and this->min_rot != 0 and this->max_rot != this->min_rot)
+    if(this->max_rot_ != 0 and this->min_rot_ != 0 and this->max_rot_ != this->min_rot_)
     {
-        angle = this->min_rot + rand()%(this->max_rot-this->min_rot);
+        angle = this->min_rot_ + rand()%(this->max_rot_-this->min_rot_);
     }
 
     input.copyTo(out(Rect(out.cols/2-(input.cols/2), out.rows/2-(input.rows/2), input.cols, input.rows)));
@@ -142,9 +142,9 @@ Mat Preprocessor::transform(const Mat &input)
     return out;
 }
 
-Preprocessor::~Preprocessor()
+PreProcessor::~PreProcessor()
 {
   // cleanup
-  delete this->parser;
-  this->output.release();
+  delete this->parser_;
+  this->output_.release();
 }

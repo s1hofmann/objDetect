@@ -70,8 +70,8 @@ int main(int argc, char **argv)
             {
                 if(amount > 0)
                 {
-                    Preprocessor test(output, positive, background, amount, rmin, rmax, show);
-                    if(test.process())
+                    PreProcessor processor(output, positive, background, amount, rmin, rmax, show);
+                    if(processor.process())
                     {
                         return 0;
                     }
