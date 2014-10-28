@@ -83,7 +83,7 @@ int Evaluator::evaluate()
         
         if(this->verbose_)
         {
-            cout << "Processing file: " << this->parser->positives[i]->filename.c_str() << endl;
+            cout << "(" << i+1 << "/" << this->parser->positives.size() << ") Processing file: " << this->parser->positives[i]->filename.c_str() << endl;
         }
 
         if(this->percent_)

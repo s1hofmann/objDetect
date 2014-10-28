@@ -15,7 +15,7 @@ function create_negatives () {
                 count=0
                 # Statically generate five samples.
                 # TODO: Dynamic version is not working due to variable scope in loops. Fix this...
-                while [ $count -lt 5 ]
+                while [ $count -lt 20 ]
                 do
                     # CONFIGURE IMAGE SIZE HERE
                     x=$((RANDOM%1000+500))
