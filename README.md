@@ -5,4 +5,4 @@
 ### Friedrich-Alexander Universität Erlangen-Nürnberg
 
 
-Authors: Michael Borst, Simon Hofmann
+Author: Simon Hofmann
